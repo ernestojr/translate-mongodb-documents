@@ -1,0 +1,13 @@
+{
+  "name": "translate-mongodb-documents",
+  "version": "1.0.0",
+  "description": "Translate mongodb documents.",
+  "main": "index.js",
+  "repository": "https://github.com/ernestojr/translate-mongodb-documents",
+  "author": "Ernesto Rojas <ernesto20145@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "mongoose": "^4.12.1"
+  }
+}
