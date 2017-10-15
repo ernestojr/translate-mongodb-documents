@@ -1,27 +1,48 @@
-require('dotenv').config()
-process.on('unhandledRejection', (err) => {
-  console.error(err)
-  process.exit(1)
-})
+const TranslateDocs = module.exports = class Translate {
+  constructor(sOrigin, sFinal, models) {
+    if (!models || !Array.isArray(models) || (models.length === 0)) {
+      throw new Error('Models to translate has not been specified.')
+    }
+    if (!sOrigin) {
+      throw new Error('String connection origin has not been specified.')
+    }
+    if (!sFinal) {
+      throw new Error('String connection final has not been specified.')
+    }
+    this._models = models
+    this._sOrigin = sOrigin
+    this._sFinal = sFinal
+  }
 
-const sOrigin = process.env.ORIGIN_MONGODB_URI
-const sFinal = process.env.FINAL_MONGODB_URI
+  async start() {
+    this._dbs = await connectToMongo([this._sOrigin, this._sFinal])
+    return Promise.all(this._models.map(async (tData) => {
+      const [oData, fData] = tData
+      const { translate } = fData
+      const [oModel, fModel] = createModels(this._dbs, tData)
+      let docs = await oModel.find(oData.criteria || {})
+      docs = docs.map(doc => {
+        if (translate) {
+          return translate(doc)
+        } else throw new Error('Translate method not found.')
+      })
+      return fModel.create(docs)
+    }))
+  }
 
-if (!sOrigin) {
-  throw new Error('The variable ORIGIN_MONGODB_URI has not been specified.')
+  disconnect() {
+    this._dbs.map(db => {
+      db.disconnect()
+    })
+  }
+
 }
-
-if (!sFinal) {
-  throw new Error('The variable FINAL_MONGODB_URI has not been specified.')
-}
-
 function startConnection(stringConnect) {
   const mongoose = require('mongoose')
   mongoose.Promise = global.Promise
   return new Promise(function(resolve, reject) {
     mongoose.connect(stringConnect, { useMongoClient: true }, function(err) {
       if (err) return reject(err)
-      console.log(`Connected to ${stringConnect}`)
       resolve(mongoose)
     })
   })
@@ -39,22 +60,3 @@ function createModels([oDB, fDB], [oData, fData]) {
     fDB.model('F' + fData.name, fData.schema, fData.collectionName)
   ]
 }
-
-async function runTranslate([oDB, fDB], models) {
-  return await Promise.all(models.map(tData => {
-    const [oData, fData] = tData
-    const [oModel, fModel] = createModels([oDB, fDB], tData)
-    const criteria = oData.criteria || {}
-    const docs = (await oModel.find(criteria)).map(doc => {
-      if (oModel.translate) {
-        return oModel.translate(doc)
-      } else throw new Error('Translate method not found.')
-    })
-    return await fModel.create(docs)
-  }))
-}
-
-(async function() {
-  const result = await connectToMongo([sOrigin, sFinal])
-  console.log('Result:', result)
-})().catch(error => console.error(error.stack))
