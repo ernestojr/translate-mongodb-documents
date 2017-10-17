@@ -1,6 +1,6 @@
 {
   "name": "translate-mongodb-documents",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Translate mongodb documents.",
   "main": "index.js",
   "repository": "https://github.com/ernestojr/translate-mongodb-documents",
