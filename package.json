@@ -6,6 +6,9 @@
   "repository": "https://github.com/ernestojr/translate-mongodb-documents",
   "author": "Ernesto Rojas <ernesto20145@gmail.com>",
   "license": "MIT",
+  "engines" : {
+    "node" : ">=8.4.0"
+  },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha -R spec ./test/index.js"
   },
